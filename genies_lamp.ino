@@ -10,6 +10,11 @@ unsigned long g_red_crystal_last_update_time;
 bool g_red_crystal_getting_brighter;
 int g_red_crystal_led_current_brightness;
 
+// Monocly Variables
+int g_monocle_position;
+unsigned long g_monocle_last_reset_time;
+int g_monocle_trigger_time;
+
 void setup() {
   randomSeed(analogRead(1));
   
@@ -29,6 +34,10 @@ void setup() {
   g_red_crystal_last_update_time = 0;
   g_red_crystal_getting_brighter = true;
   g_red_crystal_led_current_brightness = 0;
+
+  // Monocle
+  g_monocle_position = 0;
+  g_monocle_last_reset_time = 0;
 };
 
 void loop() {
@@ -36,10 +45,11 @@ void loop() {
     big_window_on();
     lamp_on();
     red_crystal_update();
-    
   } else {
-    off_sequence(); 
+    off_sequence();
   }
+
+  monocle_update();
 }
 
 bool is_PIR_on() {
@@ -109,4 +119,26 @@ void red_crystal_update() {
   }
   
   analogWrite(g_red_crystal_led_current_brightness, RED_CRYSTAL_LED_PIN);
+}
+
+void monocle_update() {
+  /*
+   *  decide what to do with the monocle and set any necessary outputs
+   */
+  if (g_monocle_trigger_time == -1) {
+    g_monocle_trigger_time = random(MONOCLE_MIN_TIME, MONOCLE_MAX_TIME);
+  }
+  if (millis() >= g_monocle_last_reset_time + g_monocle_trigger_time) {
+    g_monocle_last_reset_time = millis();
+    g_monocle_trigger_time = -1;
+    monocle_trigger();
+  }
+}
+
+void monocle_trigger() {
+  /*
+   * The random eventhas occured. make the monocle do stuff
+   */
+  // @TODO: everything
+  
 }

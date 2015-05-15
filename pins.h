@@ -18,3 +18,5 @@
 #define LAMP_LED_PIN 13
 
 #define RED_CRYSTAL_LED_PIN 11
+
+#define MONOCLE_SERVO_PIN 2
