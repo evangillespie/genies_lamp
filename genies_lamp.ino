@@ -5,7 +5,7 @@
 bool g_lamp_status;
 
 // Red Crystal Variables
-int g_red_crystal_fading_time;
+long g_red_crystal_fading_time;
 unsigned long g_red_crystal_last_update_time;
 bool g_red_crystal_getting_brighter;
 int g_red_crystal_led_current_brightness;
@@ -13,9 +13,11 @@ int g_red_crystal_led_current_brightness;
 // Monocly Variables
 int g_monocle_position;
 unsigned long g_monocle_last_reset_time;
-int g_monocle_trigger_time;
+long g_monocle_trigger_time;
 
 void setup() {
+  Serial.begin(9600);
+  
   randomSeed(analogRead(1));
   
   pinMode(PIR_SENSOR_PIN, INPUT);
@@ -37,6 +39,7 @@ void setup() {
 
   // Monocle
   g_monocle_position = 0;
+  g_monocle_trigger_time = -1;
   g_monocle_last_reset_time = 0;
 };
 
@@ -91,48 +94,61 @@ void red_crystal_update() {
   if(g_red_crystal_fading_time == 0){
      g_red_crystal_fading_time = random(RED_CRYSTAL_MIN_TIME, RED_CRYSTAL_MAX_TIME);  //fading time is in milliseconds
      g_red_crystal_last_update_time = millis();
+     Serial.println("Fading time:");
+     Serial.println(g_red_crystal_fading_time);
   }
-  float slope;
+  double slope;
   unsigned long time_difference;
   int change;
   
-  slope = RED_CRYSTAL_MAX_BRIGHTNESS / g_red_crystal_fading_time;
+  slope = (double)RED_CRYSTAL_MAX_BRIGHTNESS / (double)g_red_crystal_fading_time;
   time_difference = millis() - g_red_crystal_last_update_time;
-  change = (int)(slope * time_difference);
-  
-  if (g_red_crystal_getting_brighter){
-    if (g_red_crystal_led_current_brightness + change > RED_CRYSTAL_MAX_BRIGHTNESS) {
-      g_red_crystal_led_current_brightness = RED_CRYSTAL_MAX_BRIGHTNESS;
-      g_red_crystal_getting_brighter = false;
-      g_red_crystal_fading_time = 0;
+  change = (int)(slope * (double)time_difference);
+  if (abs(change) >= 1) {    
+    if (g_red_crystal_getting_brighter == true){
+      if ((g_red_crystal_led_current_brightness + change) > RED_CRYSTAL_MAX_BRIGHTNESS) {
+        Serial.println("flippidoo");
+        Serial.println(time_difference);
+        Serial.println(g_red_crystal_last_update_time);
+        g_red_crystal_led_current_brightness = RED_CRYSTAL_MAX_BRIGHTNESS;
+        g_red_crystal_getting_brighter = false;
+        g_red_crystal_fading_time = 0;
+      } else {
+        g_red_crystal_led_current_brightness = g_red_crystal_led_current_brightness + change;
+      }
     } else {
-      g_red_crystal_led_current_brightness += change;
+      Serial.println("in the else");
+      if ((g_red_crystal_led_current_brightness - change) < 0) {
+        g_red_crystal_led_current_brightness = 0;
+        g_red_crystal_getting_brighter = true;
+        g_red_crystal_fading_time = 0;
+      } else {
+        g_red_crystal_led_current_brightness = g_red_crystal_led_current_brightness - change;
+      }
     }
-  } else {
-    if (g_red_crystal_led_current_brightness - change > 0) {
-      g_red_crystal_led_current_brightness = 0;
-      g_red_crystal_getting_brighter = true;
-      g_red_crystal_fading_time = 0;
-    } else {
-      g_red_crystal_led_current_brightness -= change;
-    }
+
+    Serial.println(g_red_crystal_led_current_brightness);
+
+    g_red_crystal_last_update_time = millis();
+    analogWrite(g_red_crystal_led_current_brightness, RED_CRYSTAL_LED_PIN);
   }
-  
-  analogWrite(g_red_crystal_led_current_brightness, RED_CRYSTAL_LED_PIN);
 }
 
 void monocle_update() {
   /*
    *  decide what to do with the monocle and set any necessary outputs
    */
-  if (g_monocle_trigger_time == -1) {
+  if (g_monocle_trigger_time < 0) {
     g_monocle_trigger_time = random(MONOCLE_MIN_TIME, MONOCLE_MAX_TIME);
   }
   if (millis() >= g_monocle_last_reset_time + g_monocle_trigger_time) {
     g_monocle_last_reset_time = millis();
     g_monocle_trigger_time = -1;
     monocle_trigger();
-  }
+  } 
+  else {
+//    Serial.println(g_monocle_trigger_time);
+  }  
 }
 
 void monocle_trigger() {
@@ -140,5 +156,4 @@ void monocle_trigger() {
    * The random eventhas occured. make the monocle do stuff
    */
   // @TODO: everything
-  
 }
