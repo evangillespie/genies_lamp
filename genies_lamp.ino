@@ -5,10 +5,10 @@
 bool g_lamp_status;
 
 // Red Crystal Variables
-long g_red_crystal_fading_time;
-unsigned long g_red_crystal_last_update_time;
-bool g_red_crystal_getting_brighter;
+int g_red_crystal_dt;
+int g_red_crystal_getting_brighter;
 int g_red_crystal_led_current_brightness;
+unsigned long g_red_crystal_next_update_time;
 
 // Monocly Variables
 int g_monocle_position;
@@ -32,10 +32,10 @@ void setup() {
   g_lamp_status = false; 
   
   // Red Crystal
-  g_red_crystal_fading_time = 0;
-  g_red_crystal_last_update_time = 0;
-  g_red_crystal_getting_brighter = true;
-  g_red_crystal_led_current_brightness = 0;
+  g_red_crystal_getting_brighter = 1;
+  g_red_crystal_led_current_brightness = RED_CRYSTAL_MIN_BRIGHTNESS;
+  g_red_crystal_dt = 0;
+  g_red_crystal_next_update_time = 0;
 
   // Monocle
   g_monocle_position = 0;
@@ -53,6 +53,8 @@ void loop() {
   }
 
   monocle_update();
+
+  delay(100);
 }
 
 bool is_PIR_on() {
@@ -74,7 +76,7 @@ void big_window_on() {
   /*
    * Ensure the big window led is on and update to pot value
    */
-  analogWrite(BIG_WINDOW_LED_PIN, analogRead(BIG_WINDOW_POT_PIN));
+  analogWrite(BIG_WINDOW_LED_PIN, analogRead(BIG_WINDOW_POT_PIN) / 4);
 }
 
 void lamp_on() {
@@ -91,46 +93,32 @@ void red_crystal_update() {
   /*
    * update the red crystal in it's fading scheme
    */   
-  if(g_red_crystal_fading_time == 0){
-     g_red_crystal_fading_time = random(RED_CRYSTAL_MIN_TIME, RED_CRYSTAL_MAX_TIME);  //fading time is in milliseconds
-     g_red_crystal_last_update_time = millis();
-     Serial.println("Fading time:");
-     Serial.println(g_red_crystal_fading_time);
+
+  if ( g_red_crystal_dt == 0) {
+    long fading_time = random(RED_CRYSTAL_MIN_TIME, RED_CRYSTAL_MAX_TIME);
+    g_red_crystal_dt = (RED_CRYSTAL_CHANGE_INCREMENT * fading_time) / 
+            (RED_CRYSTAL_MAX_BRIGHTNESS - RED_CRYSTAL_MIN_BRIGHTNESS);
+    g_red_crystal_next_update_time = millis() + (unsigned long)g_red_crystal_dt;
   }
-  double slope;
-  unsigned long time_difference;
-  int change;
+
+  if (millis() >= g_red_crystal_next_update_time) {
+    
+    g_red_crystal_led_current_brightness = g_red_crystal_led_current_brightness + 
+            (RED_CRYSTAL_CHANGE_INCREMENT * g_red_crystal_getting_brighter);
+    g_red_crystal_next_update_time = g_red_crystal_next_update_time + g_red_crystal_dt;
   
-  slope = (double)RED_CRYSTAL_MAX_BRIGHTNESS / (double)g_red_crystal_fading_time;
-  time_difference = millis() - g_red_crystal_last_update_time;
-  change = (int)(slope * (double)time_difference);
-  if (abs(change) >= 1) {    
-    if (g_red_crystal_getting_brighter == true){
-      if ((g_red_crystal_led_current_brightness + change) > RED_CRYSTAL_MAX_BRIGHTNESS) {
-        Serial.println("flippidoo");
-        Serial.println(time_difference);
-        Serial.println(g_red_crystal_last_update_time);
-        g_red_crystal_led_current_brightness = RED_CRYSTAL_MAX_BRIGHTNESS;
-        g_red_crystal_getting_brighter = false;
-        g_red_crystal_fading_time = 0;
-      } else {
-        g_red_crystal_led_current_brightness = g_red_crystal_led_current_brightness + change;
-      }
-    } else {
-      Serial.println("in the else");
-      if ((g_red_crystal_led_current_brightness - change) < 0) {
-        g_red_crystal_led_current_brightness = 0;
-        g_red_crystal_getting_brighter = true;
-        g_red_crystal_fading_time = 0;
-      } else {
-        g_red_crystal_led_current_brightness = g_red_crystal_led_current_brightness - change;
-      }
+    if (g_red_crystal_led_current_brightness >= RED_CRYSTAL_MAX_BRIGHTNESS) {
+      g_red_crystal_led_current_brightness = RED_CRYSTAL_MAX_BRIGHTNESS;
+      g_red_crystal_getting_brighter = -1;
+      g_red_crystal_dt = 0;
+    }
+    if (g_red_crystal_led_current_brightness <= RED_CRYSTAL_MIN_BRIGHTNESS) {
+      g_red_crystal_led_current_brightness = RED_CRYSTAL_MIN_BRIGHTNESS;
+      g_red_crystal_getting_brighter = 1;
+      g_red_crystal_dt = 0;
     }
 
-    Serial.println(g_red_crystal_led_current_brightness);
-
-    g_red_crystal_last_update_time = millis();
-    analogWrite(g_red_crystal_led_current_brightness, RED_CRYSTAL_LED_PIN);
+    analogWrite(RED_CRYSTAL_LED_PIN, g_red_crystal_led_current_brightness);
   }
 }
 
@@ -145,10 +133,7 @@ void monocle_update() {
     g_monocle_last_reset_time = millis();
     g_monocle_trigger_time = -1;
     monocle_trigger();
-  } 
-  else {
-//    Serial.println(g_monocle_trigger_time);
-  }  
+  }
 }
 
 void monocle_trigger() {
