@@ -13,3 +13,6 @@
  #define MONOCLE_MIN_TIME 60000
  #define MONOCLE_MAX_TIME 180000
 
+ // Bottle random timing variables
+ #define BOTTLE_MIN_TIME 60000
+ #define BOTTLE_MAX_TIME 180000

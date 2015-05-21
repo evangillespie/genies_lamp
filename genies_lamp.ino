@@ -10,10 +10,15 @@ int g_red_crystal_getting_brighter;
 int g_red_crystal_led_current_brightness;
 unsigned long g_red_crystal_next_update_time;
 
-// Monocly Variables
+// Monocle Variables
 int g_monocle_position;
 unsigned long g_monocle_last_reset_time;
 long g_monocle_trigger_time;
+
+// Bottle Variables
+int g_bottle_position;
+unsigned long g_bottle_last_reset_time;
+long g_bottle_trigger_time;
 
 void setup() {
   Serial.begin(9600);
@@ -41,6 +46,11 @@ void setup() {
   g_monocle_position = 0;
   g_monocle_trigger_time = -1;
   g_monocle_last_reset_time = 0;
+
+  // Bottle
+  g_bottle_position = 0;
+  g_bottle_trigger_time = -1;
+  g_bottle_last_reset_time = 0;
 };
 
 void loop() {
@@ -138,7 +148,29 @@ void monocle_update() {
 
 void monocle_trigger() {
   /*
-   * The random eventhas occured. make the monocle do stuff
+   * The random event has occured. make the monocle do stuff
+   */
+  // @TODO: everything
+}
+
+void bottle_update() {
+  /*
+   *  Decide when to make the bottle actions happen
+   */
+  if (g_bottle_trigger_time < 0) {
+    g_bottle_trigger_time = random(BOTTLE_MIN_TIME, BOTTLE_MAX_TIME);
+  }
+
+  if (millis() >= g_bottle_last_reset_time + g_bottle_trigger_time) {
+    g_bottle_last_reset_time = millis();
+    g_bottle_trigger_time = -1;
+    bottle_trigger();
+  }
+}
+
+void bottle_trigger() {
+  /*
+   *  Make the bottle do its actions
    */
   // @TODO: everything
 }
