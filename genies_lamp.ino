@@ -21,8 +21,7 @@ unsigned long g_bottle_last_reset_time;
 long g_bottle_trigger_time;
 
 void setup() {
-  Serial.begin(9600);
-  
+
   randomSeed(analogRead(1));
   
   pinMode(PIR_SENSOR_PIN, INPUT);
@@ -39,7 +38,7 @@ void setup() {
   // Red Crystal
   g_red_crystal_getting_brighter = 1;
   g_red_crystal_led_current_brightness = RED_CRYSTAL_MIN_BRIGHTNESS;
-  g_red_crystal_dt = 0;
+  g_red_crystal_dt = -1;
   g_red_crystal_next_update_time = 0;
 
   // Monocle
@@ -104,7 +103,7 @@ void red_crystal_update() {
    * update the red crystal in it's fading scheme
    */   
 
-  if ( g_red_crystal_dt == 0) {
+  if ( g_red_crystal_dt < 0) {
     long fading_time = random(RED_CRYSTAL_MIN_TIME, RED_CRYSTAL_MAX_TIME);
     g_red_crystal_dt = (RED_CRYSTAL_CHANGE_INCREMENT * fading_time) / 
             (RED_CRYSTAL_MAX_BRIGHTNESS - RED_CRYSTAL_MIN_BRIGHTNESS);
@@ -120,12 +119,12 @@ void red_crystal_update() {
     if (g_red_crystal_led_current_brightness >= RED_CRYSTAL_MAX_BRIGHTNESS) {
       g_red_crystal_led_current_brightness = RED_CRYSTAL_MAX_BRIGHTNESS;
       g_red_crystal_getting_brighter = -1;
-      g_red_crystal_dt = 0;
+      g_red_crystal_dt = -1;
     }
     if (g_red_crystal_led_current_brightness <= RED_CRYSTAL_MIN_BRIGHTNESS) {
       g_red_crystal_led_current_brightness = RED_CRYSTAL_MIN_BRIGHTNESS;
       g_red_crystal_getting_brighter = 1;
-      g_red_crystal_dt = 0;
+      g_red_crystal_dt = -1;
     }
 
     analogWrite(RED_CRYSTAL_LED_PIN, g_red_crystal_led_current_brightness);
