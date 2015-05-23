@@ -30,6 +30,8 @@ VarSpeedServo monocle_servo;
 int g_bottle_position;
 unsigned long g_bottle_last_reset_time;
 long g_bottle_trigger_time;
+VarSpeedServo bottle_door_servo;
+VarSpeedServo bottle_servo;
 
 
 void setup() {
@@ -70,6 +72,8 @@ void setup() {
   g_bottle_position = 0;
   g_bottle_trigger_time = -1;
   g_bottle_last_reset_time = 0;
+  bottle_door_servo.write(BOTTLE_DOOR_SERVO_CLOSED_POS, BOTTLE_DOOR_SERVO_SPEED, false);
+
 }
 
 
@@ -272,6 +276,9 @@ void bottle_trigger() {
   /*
    *  Make the bottle do its actions
    */
-  // @TODO: everything
-   Serial.println("triggering the bottle");
+  
+  // open door
+  bottle_door_servo.write(BOTTLE_DOOR_SERVO_OPEN_POS, BOTTLE_DOOR_SERVO_SPEED, false);
+  
+
 }
