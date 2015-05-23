@@ -1,4 +1,14 @@
 
+/*
+*
+* Arduino program to operate the Genie's Lamp project
+*
+* @AUTHOR: Evan Gillespie
+*
+*/
+
+
+
 #include "config.h"
 #include "pins.h"
 
@@ -279,6 +289,7 @@ void bottle_trigger() {
   
   // open door
   bottle_door_servo.write(BOTTLE_DOOR_SERVO_OPEN_POS, BOTTLE_DOOR_SERVO_SPEED, false);
-  
+
+  //@TODO: rest
 
 }
