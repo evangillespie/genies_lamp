@@ -24,3 +24,5 @@
 
 #define BOTTLE_DOOR_SERVO_PIN 6
 #define BOTTLE_SERVO_PIN 5
+
+#define ARDUINO_SOUND_PIN 4
