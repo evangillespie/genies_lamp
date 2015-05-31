@@ -16,6 +16,7 @@
 
 // Global Variables
 bool g_lamp_status;
+bool g_big_window_under_pot_control;
 
 
 // Red Crystal Variables
@@ -41,6 +42,9 @@ unsigned long g_bottle_last_reset_time;
 long g_bottle_trigger_time;
 VarSpeedServo bottle_door_servo;
 VarSpeedServo bottle_servo;
+int g_bottle_action_num;
+unsigned long g_bottle_last_action_time;
+bool g_bottle_waiting;
 
 
 void setup() {
@@ -54,6 +58,7 @@ void setup() {
   // Big Window
   pinMode(BIG_WINDOW_LED_PIN, OUTPUT); 
   analogWrite(BIG_WINDOW_LED_PIN, 0);
+  g_big_window_under_pot_control = true;
    
   // Lamp
   pinMode(LAMP_LED_PIN, OUTPUT);
@@ -82,7 +87,13 @@ void setup() {
   g_bottle_trigger_time = -1;
   g_bottle_last_reset_time = 0;
   bottle_door_servo.write(BOTTLE_DOOR_SERVO_CLOSED_POS, BOTTLE_DOOR_SERVO_SPEED, false);
+  g_bottle_action_num = 0;
+  g_bottle_last_action_time = 0;
+  g_bottle_waiting = false;
 
+  //sound
+  pinMode(ARDUINO_SOUND_PIN, OUTPUT);
+  digitalWrite(ARDUINO_SOUND_PIN, LOW);
 }
 
 
@@ -123,7 +134,9 @@ void big_window_on() {
   /*
    * Ensure the big window led is on and update to pot value
    */
-  analogWrite(BIG_WINDOW_LED_PIN, analogRead(BIG_WINDOW_POT_PIN) / 4);
+  if (g_big_window_under_pot_control == true){
+    analogWrite(BIG_WINDOW_LED_PIN, analogRead(BIG_WINDOW_POT_PIN) / 4);
+  }
 }
 
 
@@ -279,16 +292,122 @@ void bottle_update() {
       bottle_trigger();
     }
   }
+
+  if (g_bottle_action_num > 0) {
+    bottle_movement();
+  }
 }
 
 void bottle_trigger() {
   /*
    *  Make the bottle do its actions
    */
-  
-  // open door
-  bottle_door_servo.write(BOTTLE_DOOR_SERVO_OPEN_POS, BOTTLE_DOOR_SERVO_SPEED, false);
 
-  //@TODO: rest
+  g_bottle_action_num = 1;
+}
 
+
+void bottle_movement() {
+  /*
+   *  Continue all bottle movements
+   *  Order is: open door, move bottle, fade window (5s), play sound, 
+   *    lamp off, green led fades on/off for 15-30s,
+   *    big window back, bottle moved back, door closes
+   */
+
+  switch(g_bottle_action_num){
+
+    //door open
+    case 1:
+      if (g_bottle_waiting == false){
+        bottle_door_servo.write(BOTTLE_DOOR_SERVO_OPEN_POS, BOTTLE_DOOR_SERVO_SPEED, false);
+        g_bottle_last_action_time = millis();
+        g_bottle_waiting = true;
+      } else {
+        if (millis() >= g_bottle_last_action_time + BOTTLE_DOOR_OPEN_TIME) {
+          g_bottle_action_num = 2;
+          g_bottle_waiting = false;
+        }
+      }
+      break;
+
+    // bottle move
+    case 2:
+      if (g_bottle_waiting == false){
+        int bottle_speed = random(BOTTLE_SERVO_SPEED_MIN, BOTTLE_SERVO_SPEED_MAX + 1);
+
+        bottle_servo.write(BOTTLE_SERVO_OUTSIDE_POS, bottle_speed, false);
+        g_bottle_last_action_time = millis();
+        g_bottle_waiting = true;
+      } else {
+        if (millis() >= g_bottle_last_action_time + BOTTLE_MOVE_TIME) {
+          g_bottle_action_num = 3;
+          g_bottle_waiting = false;
+        }
+      }
+      break;
+
+    // fade_window
+    case 3:
+      g_big_window_under_pot_control = false;
+
+      // @TODO: this
+      g_bottle_action_num = 4;
+      break;
+
+    //play sound
+    case 4:
+      digitalWrite(ARDUINO_SOUND_PIN, HIGH);
+      g_bottle_action_num = 5;
+      break;
+
+    //turn lamp off
+    case 5:
+      digitalWrite(LAMP_LED_PIN, LOW);
+      g_bottle_action_num = 6;
+      break;
+
+    // fade the green led back and forth
+    // cleanup includes turning sound off
+    case 6:
+      //@TODO: this
+      g_bottle_action_num = 7;
+      break;
+
+    // restore pot control to big window
+    case 7:
+      g_big_window_under_pot_control = true;
+      g_bottle_action_num = 8;
+      break;
+
+    //move bottle back
+    case 8:
+      if (g_bottle_waiting == false){
+        int bottle_speed = random(BOTTLE_SERVO_SPEED_MIN, BOTTLE_SERVO_SPEED_MAX + 1);
+
+        bottle_servo.write(BOTTLE_SERVO_INSIDE_POS, bottle_speed, false);
+        g_bottle_last_action_time = millis();
+        g_bottle_waiting = true;
+      } else {
+        if (millis() >= g_bottle_last_action_time + BOTTLE_MOVE_TIME) {
+          g_bottle_action_num = 9;
+          g_bottle_waiting = false;
+        }
+      }
+      break;
+
+    //close door
+    case 9:
+      if (g_bottle_waiting == false){
+        bottle_door_servo.write(BOTTLE_DOOR_SERVO_CLOSED_POS, BOTTLE_DOOR_SERVO_SPEED, false);
+        g_bottle_last_action_time = millis();
+        g_bottle_waiting = true;
+      } else {
+        if (millis() >= g_bottle_last_action_time + BOTTLE_DOOR_OPEN_TIME) {
+          g_bottle_action_num = 0;
+          g_bottle_waiting = false;
+        }
+      }
+      break;
+  }
 }
