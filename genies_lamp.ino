@@ -15,8 +15,13 @@
 
 
 // Global Variables
+
+// lamp
 bool g_lamp_status;
+
+// big window
 bool g_big_window_under_pot_control;
+int g_big_window_value;
 
 
 // Red Crystal Variables
@@ -44,7 +49,11 @@ VarSpeedServo bottle_door_servo;
 VarSpeedServo bottle_servo;
 int g_bottle_action_num;
 unsigned long g_bottle_last_action_time;
+unsigned long g_bottle_next_action_time;
 bool g_bottle_waiting;
+double g_slope;
+int g_update_time;
+int g_green_led_value;
 
 
 void setup() {
@@ -59,6 +68,7 @@ void setup() {
   pinMode(BIG_WINDOW_LED_PIN, OUTPUT); 
   analogWrite(BIG_WINDOW_LED_PIN, 0);
   g_big_window_under_pot_control = true;
+  g_big_window_value = 0;
    
   // Lamp
   pinMode(LAMP_LED_PIN, OUTPUT);
@@ -90,6 +100,7 @@ void setup() {
   g_bottle_action_num = 0;
   g_bottle_last_action_time = 0;
   g_bottle_waiting = false;
+  g_green_led_value = 0;
 
   //sound
   pinMode(ARDUINO_SOUND_PIN, OUTPUT);
@@ -99,7 +110,7 @@ void setup() {
 
 void loop() {
   if( is_PIR_on() == true){
-    big_window_on();
+    turn_leds_on();
     lamp_on();
     red_crystal_update();
   } else {
@@ -107,7 +118,7 @@ void loop() {
   }
 
   monocle_update();
-  bottle_update();
+  //bottle_update();
 
   delay(100);
 }
@@ -129,13 +140,16 @@ void off_sequence() {
   // @TODO: everything  
 }
 
-
-void big_window_on() {
+void turn_leds_on() {
   /*
-   * Ensure the big window led is on and update to pot value
+   * Ensure the always-on leds are on and update to pot value
    */
+  digitalWrite(MOSFET_LED, HIGH);
+  digitalWrite(HALLWAY_LED, HIGH);
+
   if (g_big_window_under_pot_control == true){
-    analogWrite(BIG_WINDOW_LED_PIN, analogRead(BIG_WINDOW_POT_PIN) / 4);
+    g_big_window_value = analogRead(BIG_WINDOW_POT_PIN) / 4;
+    analogWrite(BIG_WINDOW_LED_PIN, g_big_window_value);
   }
 }
 
@@ -351,8 +365,22 @@ void bottle_movement() {
     case 3:
       g_big_window_under_pot_control = false;
 
-      // @TODO: this
-      g_bottle_action_num = 4;
+      g_slope = g_big_window_value / 5000;  // lamp fades over 5 seconds
+      g_update_time = 50;
+      g_bottle_next_action_time = millis() + g_update_time;
+
+      if (millis() >= g_bottle_next_action_time){
+        g_bottle_next_action_time += g_update_time;
+        g_big_window_value -= g_slope * g_update_time;
+      }
+
+      if (g_big_window_value <= 0){
+        g_big_window_value = 0;
+        g_bottle_action_num = 4;
+      }
+
+      analogWrite(BIG_WINDOW_LED_PIN, g_big_window_value);
+
       break;
 
     //play sound
@@ -370,8 +398,34 @@ void bottle_movement() {
     // fade the green led back and forth
     // cleanup includes turning sound off
     case 6:
-      //@TODO: this
-      g_bottle_action_num = 7;
+      //using g_bottle_last_action_time b/c its available
+      g_bottle_last_action_time = millis() + random(15000, 30001);
+
+      g_slope = 255 / 5000;
+      g_update_time = 50;
+      g_bottle_next_action_time = millis() + g_update_time;
+
+      if (millis() >= g_bottle_next_action_time){
+        g_bottle_next_action_time += g_update_time;
+
+        g_green_led_value += g_update_time * g_slope;
+
+        if (g_green_led_value >=255){
+          g_green_led_value = 255;
+          g_slope = g_slope * -1;
+        }
+        if (g_green_led_value <= 0){
+          g_green_led_value = 0;
+          g_slope = g_slope * -1;
+        }
+      }
+
+      if (millis() >= g_bottle_last_action_time){
+        g_bottle_action_num = 7;
+        g_green_led_value = 0;
+      }
+
+      analogWrite(GREEN_LED_PIN, g_green_led_value);
       break;
 
     // restore pot control to big window

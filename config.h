@@ -10,8 +10,8 @@
 #define RED_CRYSTAL_CHANGE_INCREMENT 3 // incremental change in brightness each time the crystal led updates
 
 // Monocle random timing variables
-#define MONOCLE_MIN_TIME 60000
-#define MONOCLE_MAX_TIME 180000
+#define MONOCLE_MIN_TIME 10000 //60000
+#define MONOCLE_MAX_TIME 30000 //180000
 #define MONOCLE_SERVO_MIN_SPEED 4
 #define MONOCLE_SERVO_MAX_SPEED 40
 #define MONOCLE_SERVO_STARTING_POSITION 1 // 1-8
