@@ -15,6 +15,7 @@
 
 
 // Global Variables
+unsigned long g_pir_timeout;
 
 // lamp
 bool g_lamp_status;
@@ -52,18 +53,18 @@ unsigned long g_bottle_last_action_time;
 unsigned long g_bottle_next_action_time;
 bool g_bottle_waiting;
 double g_slope;
-int g_update_time;
+double g_update_time;
 int g_green_led_value;
 
 
 void setup() {
 
   Serial.begin(9600);
-
   randomSeed(analogRead(1));
   
   pinMode(PIR_SENSOR_PIN, INPUT);
-  
+  g_pir_timeout = 0;
+
   // Big Window
   pinMode(BIG_WINDOW_LED_PIN, OUTPUT); 
   analogWrite(BIG_WINDOW_LED_PIN, 0);
@@ -101,6 +102,12 @@ void setup() {
   g_bottle_last_action_time = 0;
   g_bottle_waiting = false;
   g_green_led_value = 0;
+  g_slope = -1;
+
+  bottle_servo.attach(BOTTLE_SERVO_PIN);
+  bottle_door_servo.attach(BOTTLE_DOOR_SERVO_PIN);
+  bottle_servo.write(BOTTLE_SERVO_INSIDE_POS, 10, false);
+  bottle_door_servo.write(BOTTLE_DOOR_SERVO_CLOSED_POS, BOTTLE_DOOR_SERVO_SPEED, false);
 
   //sound
   pinMode(ARDUINO_SOUND_PIN, OUTPUT);
@@ -117,8 +124,8 @@ void loop() {
     off_sequence();
   }
 
-  monocle_update();
-  //bottle_update();
+  // monocle_update();
+  bottle_update();
 
   delay(100);
 }
@@ -128,8 +135,17 @@ bool is_PIR_on() {
   /*
    * return true if the pir is on
    */
-   // @TODO: get real value
-   return true;  
+   
+  // if (digitalRead(PIR_SENSOR_PIN)) {
+  //   g_pir_timeout = millis() + PIR_TIMEOUT_TIME;
+  //   return true;
+  // } else if (millis() <= g_pir_timeout) {
+  //   return true;
+  // } else {
+  //    return false;  
+  // }
+
+  return true;
 }
 
 
@@ -246,6 +262,7 @@ void monocle_trigger() {
   /*
    * The random event has occured. make the monocle do stuff
    */
+
   int r_monocle_servo_state = g_monocle_servo_state;
   while (g_monocle_servo_state == r_monocle_servo_state) {
     r_monocle_servo_state = random(1, 9);
@@ -316,8 +333,8 @@ void bottle_trigger() {
   /*
    *  Make the bottle do its actions
    */
-
-  g_bottle_action_num = 1;
+  Serial .println("BOTTLE!");
+  g_bottle_action_num = 3;
 }
 
 
@@ -333,6 +350,7 @@ void bottle_movement() {
 
     //door open
     case 1:
+      Serial.println("opening door....");
       if (g_bottle_waiting == false){
         bottle_door_servo.write(BOTTLE_DOOR_SERVO_OPEN_POS, BOTTLE_DOOR_SERVO_SPEED, false);
         g_bottle_last_action_time = millis();
@@ -347,6 +365,7 @@ void bottle_movement() {
 
     // bottle move
     case 2:
+      Serial.println("moving bottle....");
       if (g_bottle_waiting == false){
         int bottle_speed = random(BOTTLE_SERVO_SPEED_MIN, BOTTLE_SERVO_SPEED_MAX + 1);
 
@@ -363,19 +382,25 @@ void bottle_movement() {
 
     // fade_window
     case 3:
+      Serial.println("fading window....");
       g_big_window_under_pot_control = false;
 
-      g_slope = g_big_window_value / 5000;  // lamp fades over 5 seconds
-      g_update_time = 50;
-      g_bottle_next_action_time = millis() + g_update_time;
+      if (g_slope < 0){
+        g_slope = (double)g_big_window_value / (double)5000;  // lamp fades over 5 seconds
+        if (g_slope < 0.01)
+          g_slope = 0.01;
+        g_update_time = 100;
+        g_bottle_next_action_time = millis() + (unsigned long)g_update_time;
+      }
 
       if (millis() >= g_bottle_next_action_time){
-        g_bottle_next_action_time += g_update_time;
-        g_big_window_value -= g_slope * g_update_time;
+        g_bottle_next_action_time += (unsigned long)g_update_time;
+        g_big_window_value -= (int)(g_slope * (double)g_update_time);
       }
 
       if (g_big_window_value <= 0){
         g_big_window_value = 0;
+        g_slope = -1;
         g_bottle_action_num = 4;
       }
 
@@ -385,19 +410,22 @@ void bottle_movement() {
 
     //play sound
     case 4:
+      Serial.println("playing sound....");
       digitalWrite(ARDUINO_SOUND_PIN, HIGH);
       g_bottle_action_num = 5;
       break;
 
     //turn lamp off
     case 5:
+      Serial.println("lamp off....");
       digitalWrite(LAMP_LED_PIN, LOW);
-      g_bottle_action_num = 6;
+      g_bottle_action_num = 7;
       break;
 
     // fade the green led back and forth
     // cleanup includes turning sound off
     case 6:
+      Serial.println("green led fading....");
       //using g_bottle_last_action_time b/c its available
       g_bottle_last_action_time = millis() + random(15000, 30001);
 
@@ -423,6 +451,7 @@ void bottle_movement() {
       if (millis() >= g_bottle_last_action_time){
         g_bottle_action_num = 7;
         g_green_led_value = 0;
+        digitalWrite(ARDUINO_SOUND_PIN, LOW);
       }
 
       analogWrite(GREEN_LED_PIN, g_green_led_value);
@@ -430,12 +459,14 @@ void bottle_movement() {
 
     // restore pot control to big window
     case 7:
+      Serial.println("restore pot on window....");
       g_big_window_under_pot_control = true;
-      g_bottle_action_num = 8;
+      g_bottle_action_num = 9;
       break;
 
     //move bottle back
     case 8:
+      Serial.println("bottle back....");
       if (g_bottle_waiting == false){
         int bottle_speed = random(BOTTLE_SERVO_SPEED_MIN, BOTTLE_SERVO_SPEED_MAX + 1);
 
@@ -452,6 +483,7 @@ void bottle_movement() {
 
     //close door
     case 9:
+      Serial.println("closing door....");
       if (g_bottle_waiting == false){
         bottle_door_servo.write(BOTTLE_DOOR_SERVO_CLOSED_POS, BOTTLE_DOOR_SERVO_SPEED, false);
         g_bottle_last_action_time = millis();
