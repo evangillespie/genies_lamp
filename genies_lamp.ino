@@ -419,7 +419,7 @@ void bottle_movement() {
     case 5:
       Serial.println("lamp off....");
       digitalWrite(LAMP_LED_PIN, LOW);
-      g_bottle_action_num = 7;
+      g_bottle_action_num = 8;
       break;
 
     // fade the green led back and forth
