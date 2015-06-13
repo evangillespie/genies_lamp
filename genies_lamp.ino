@@ -124,7 +124,7 @@ void loop() {
     off_sequence();
   }
 
-  // monocle_update();
+  monocle_update();
   bottle_update();
 
   delay(100);
