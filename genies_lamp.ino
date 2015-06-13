@@ -282,10 +282,10 @@ void monocle_move_servo_to_position_at_random_speed(int position_state) {
   int speed = random(MONOCLE_SERVO_MIN_SPEED, MONOCLE_SERVO_MAX_SPEED + 1);
   switch(position_state) {
     case 1:
-      monocle_servo.write(65, speed, false);
+      monocle_servo.write(62, speed, false);
       break;
     case 2:
-      monocle_servo.write(70, speed, false);
+      monocle_servo.write(69, speed, false);
       break;
     case 3:
       monocle_servo.write(79, speed, false);
@@ -294,16 +294,16 @@ void monocle_move_servo_to_position_at_random_speed(int position_state) {
       monocle_servo.write(88, speed, false);
       break;
     case 5:
-      monocle_servo.write(98, speed, false);
+      monocle_servo.write(99, speed, false);
       break;
     case 6:
-      monocle_servo.write(111, speed, false);
+      monocle_servo.write(112, speed, false);
       break;
     case 7:
       monocle_servo.write(125, speed, false);
       break;
     case 8:
-      monocle_servo.write(141, speed, false);
+      monocle_servo.write(53, speed, false);
       break;
   }
 }
