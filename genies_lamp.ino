@@ -164,7 +164,7 @@ void turn_leds_on() {
   digitalWrite(HALLWAY_LED, HIGH);
 
   if (g_big_window_under_pot_control == true){
-    g_big_window_value = analogRead(BIG_WINDOW_POT_PIN) / 4;
+    g_big_window_value = map(analogRead(BIG_WINDOW_POT_PIN), 0, 1023, 0, 255);
     analogWrite(BIG_WINDOW_LED_PIN, g_big_window_value);
   }
 }
