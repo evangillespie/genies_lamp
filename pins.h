@@ -5,7 +5,7 @@
 //////////////////////////////////////
 // INPUT PINS
 //////////////////////////////////////
-#define PIR_SENSOR_PIN 1  // @ todo: get real value
+#define PIR_SENSOR_PIN 2  // @ todo: get real value
 
 #define BIG_WINDOW_POT_PIN 0
 
