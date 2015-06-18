@@ -15,7 +15,6 @@
 
 
 // Global Variables
-unsigned long g_pir_timeout;
 
 // lamp
 bool g_lamp_status;
@@ -64,7 +63,6 @@ void setup() {
   randomSeed(analogRead(1));
 
   pinMode(PIR_SENSOR_PIN, INPUT);
-  g_pir_timeout = 0;
 
   // Big Window
   pinMode(BIG_WINDOW_LED_PIN, OUTPUT); 
@@ -94,7 +92,7 @@ void setup() {
   g_monocle_flash_tigger_time = 0;
   monocle_servo.attach(MONOCLE_SERVO_PIN);
   monocle_move_servo_to_position_at_random_speed(MONOCLE_SERVO_STARTING_POSITION);
-  monocle_servo.attach();
+  monocle_servo.detach();
 
   // Bottle
   g_bottle_position = 0;

@@ -4,7 +4,7 @@
 
 // Red crystal fading variables
 #define RED_CRYSTAL_MAX_BRIGHTNESS 255	//0-255
-#define RED_CRYSTAL_MIN_BRIGHTNESS 
+#define RED_CRYSTAL_MIN_BRIGHTNESS 1
 #define RED_CRYSTAL_MIN_TIME 100  // minimum time to fade in milliseconds
 #define RED_CRYSTAL_MAX_TIME 120
 #define RED_CRYSTAL_CHANGE_INCREMENT 6 // incremental change in brightness each time the crystal led updates
