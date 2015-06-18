@@ -23,6 +23,7 @@ bool g_lamp_status;
 // big window
 bool g_big_window_under_pot_control;
 int g_big_window_value;
+int g_big_window_value_0;
 
 
 // Red Crystal Variables
@@ -61,7 +62,7 @@ void setup() {
 
   Serial.begin(9600);
   randomSeed(analogRead(1));
-  
+
   pinMode(PIR_SENSOR_PIN, INPUT);
   g_pir_timeout = 0;
 
@@ -70,6 +71,7 @@ void setup() {
   analogWrite(BIG_WINDOW_LED_PIN, 0);
   g_big_window_under_pot_control = true;
   g_big_window_value = 0;
+  g_big_window_value_0 = 0;
    
   // Lamp
   pinMode(LAMP_LED_PIN, OUTPUT);
@@ -92,6 +94,7 @@ void setup() {
   g_monocle_flash_tigger_time = 0;
   monocle_servo.attach(MONOCLE_SERVO_PIN);
   monocle_move_servo_to_position_at_random_speed(MONOCLE_SERVO_STARTING_POSITION);
+  monocle_servo.attach();
 
   // Bottle
   g_bottle_position = 0;
@@ -108,6 +111,8 @@ void setup() {
   bottle_door_servo.attach(BOTTLE_DOOR_SERVO_PIN);
   bottle_servo.write(BOTTLE_SERVO_INSIDE_POS, 2, false);
   bottle_door_servo.write(BOTTLE_DOOR_SERVO_CLOSED_POS, BOTTLE_DOOR_SERVO_SPEED, false);
+  bottle_servo.detach();
+  bottle_door_servo.detach();
 
   //sound
   pinMode(ARDUINO_SOUND_PIN, OUTPUT);
@@ -120,8 +125,6 @@ void loop() {
     turn_leds_on();
     lamp_on();
     red_crystal_update();
-  } else {
-    off_sequence();
   }
 
   monocle_update();
@@ -136,24 +139,11 @@ bool is_PIR_on() {
    * return true if the pir is on
    */
    
-  // if (digitalRead(PIR_SENSOR_PIN)) {
-  //   g_pir_timeout = millis() + PIR_TIMEOUT_TIME;
-  //   return true;
-  // } else if (millis() <= g_pir_timeout) {
-  //   return true;
-  // } else {
-  //    return false;  
-  // }
-
-  return true;
-}
-
-
-void off_sequence() {
-  /*
-   * Shut everything down
-   */
-  // @TODO: everything  
+  if (digitalRead(PIR_SENSOR_PIN)) {
+    return true;
+  } else {
+     return false;  
+  }
 }
 
 void turn_leds_on() {
@@ -227,6 +217,7 @@ void monocle_update() {
     g_monocle_trigger_time = -1;
 
     if (is_PIR_on()) {
+      //@TODO: attach/detach the monocle servo
       monocle_trigger();
     }
   }
@@ -282,28 +273,28 @@ void monocle_move_servo_to_position_at_random_speed(int position_state) {
   int speed = random(MONOCLE_SERVO_MIN_SPEED, MONOCLE_SERVO_MAX_SPEED + 1);
   switch(position_state) {
     case 1:
-      monocle_servo.write(62, speed, false);
+      monocle_servo.write(64, speed, false);
       break;
     case 2:
-      monocle_servo.write(69, speed, false);
+      monocle_servo.write(71, speed, false);
       break;
     case 3:
-      monocle_servo.write(79, speed, false);
+      monocle_servo.write(80, speed, false);
       break;
     case 4:
-      monocle_servo.write(88, speed, false);
+      monocle_servo.write(90, speed, false);
       break;
     case 5:
-      monocle_servo.write(99, speed, false);
+      monocle_servo.write(100, speed, false);
       break;
     case 6:
       monocle_servo.write(112, speed, false);
       break;
     case 7:
-      monocle_servo.write(125, speed, false);
+      monocle_servo.write(126, speed, false);
       break;
     case 8:
-      monocle_servo.write(53, speed, false);
+      monocle_servo.write(54, speed, false);
       break;
   }
 }
@@ -350,6 +341,7 @@ void bottle_movement() {
     //door open
     case 1:
       if (g_bottle_waiting == false){
+        bottle_door_servo.attach(BOTTLE_DOOR_SERVO_PIN);
         bottle_door_servo.write(BOTTLE_DOOR_SERVO_OPEN_POS, BOTTLE_DOOR_SERVO_SPEED, false);
         g_bottle_last_action_time = millis();
         g_bottle_waiting = true;
@@ -357,6 +349,7 @@ void bottle_movement() {
         if (millis() >= g_bottle_last_action_time + BOTTLE_DOOR_OPEN_TIME) {
           g_bottle_action_num = 2;
           g_bottle_waiting = false;
+          bottle_door_servo.detach();
         }
       }
       break;
@@ -366,6 +359,7 @@ void bottle_movement() {
       if (g_bottle_waiting == false){
         int bottle_speed = random(BOTTLE_SERVO_SPEED_MIN, BOTTLE_SERVO_SPEED_MAX + 1);
 
+        bottle_servo.attach(BOTTLE_SERVO_PIN);
         bottle_servo.write(BOTTLE_SERVO_OUTSIDE_POS, bottle_speed, false);
         g_bottle_last_action_time = millis();
         g_bottle_waiting = true;
@@ -373,6 +367,7 @@ void bottle_movement() {
         if (millis() >= g_bottle_last_action_time + BOTTLE_MOVE_TIME) {
           g_bottle_action_num = 3;
           g_bottle_waiting = false;
+          bottle_servo.detach();
         }
       }
       break;
@@ -387,6 +382,7 @@ void bottle_movement() {
           g_slope = 0.01;
         g_update_time = 100;
         g_bottle_next_action_time = millis() + (unsigned long)g_update_time;
+        g_big_window_value_0 =   g_big_window_value;
       }
 
       if (millis() >= g_bottle_next_action_time){
@@ -424,7 +420,7 @@ void bottle_movement() {
         //using g_bottle_last_action_time b/c its available
         g_bottle_last_action_time = millis() + random(15000, 30001);
 
-        g_slope = 0.05;
+        g_slope = get_green_led_slope();
         g_update_time = 100;
         g_bottle_next_action_time = millis() + (unsigned long)g_update_time;
       }
@@ -433,12 +429,12 @@ void bottle_movement() {
         g_bottle_next_action_time += (unsigned long)g_update_time;
         g_green_led_value += (int)((double)g_update_time * g_slope);
 
-        if (g_green_led_value >=255){
-          g_green_led_value = 255;
-          g_slope = g_slope * -1;
+        if (g_green_led_value >=GREEN_LED_MAX_BRIGHTNESS){
+          g_green_led_value = GREEN_LED_MAX_BRIGHTNESS;
+          g_slope = get_green_led_slope() * -1;
         }
-        if (g_green_led_value <= 0){
-          g_green_led_value = 0;
+        if (g_green_led_value <= GREEN_LED_MIN_BRIGHTNESS){
+          g_green_led_value = GREEN_LED_MIN_BRIGHTNESS;
           g_slope = g_slope * -1;
         }
       }
@@ -462,21 +458,41 @@ void bottle_movement() {
     case 8:
       if (g_bottle_waiting == false){
         int bottle_speed = random(BOTTLE_SERVO_SPEED_MIN, BOTTLE_SERVO_SPEED_MAX + 1);
-
+        bottle_servo.attach(BOTTLE_SERVO_PIN);
         bottle_servo.write(BOTTLE_SERVO_INSIDE_POS, bottle_speed, false);
+        bottle_servo.detach();
         g_bottle_last_action_time = millis();
         g_bottle_waiting = true;
       } else {
         if (millis() >= g_bottle_last_action_time + BOTTLE_MOVE_TIME) {
           g_bottle_action_num = 9;
           g_bottle_waiting = false;
+          g_slope = -1;
+        } else {
+          //fade the window back up to the original
+          //@TODO: fade the window
+          if (g_slope == -1){
+            g_slope =   g_big_window_value_0 / BOTTLE_MOVE_TIME;
+            g_update_time = 100;
+            g_bottle_next_action_time = millis() + (unsigned long)g_update_time;
+          }
+          if (millis() >= g_bottle_next_action_time){
+            g_bottle_next_action_time += (unsigned long)g_update_time;
+            g_big_window_value += (int)((double)g_update_time * g_slope);
+
+            if (g_big_window_value >= g_big_window_value_0){
+              g_big_window_value = g_big_window_value_0;
+            }
+          }
         }
       }
+      analogWrite(BIG_WINDOW_LED_PIN, g_big_window_value);
       break;
 
     //close door
     case 9:
       if (g_bottle_waiting == false){
+        bottle_door_servo.attach(BOTTLE_DOOR_SERVO_PIN);
         bottle_door_servo.write(BOTTLE_DOOR_SERVO_CLOSED_POS, BOTTLE_DOOR_SERVO_SPEED, false);
         g_bottle_last_action_time = millis();
         g_bottle_waiting = true;
@@ -484,8 +500,18 @@ void bottle_movement() {
         if (millis() >= g_bottle_last_action_time + BOTTLE_DOOR_OPEN_TIME) {
           g_bottle_action_num = 0;
           g_bottle_waiting = false;
+          bottle_door_servo.detach();
         }
       }
       break;
   }
+}
+
+float get_green_led_slope(){
+  /*
+  *   get a random slope for the green led to fade at
+  */
+
+  return (float)random(3, 8) / 100;
+
 }

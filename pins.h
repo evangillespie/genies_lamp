@@ -14,19 +14,19 @@
 // OUTPUT PINS
 //////////////////////////////////////
 
-#define BIG_WINDOW_LED_PIN 9
+#define BIG_WINDOW_LED_PIN 5
 #define MOSFET_LED 8
 #define HALLWAY_LED 12
 #define LAMP_LED_PIN 13
 
 #define RED_CRYSTAL_LED_PIN 11
 
-#define MONOCLE_SERVO_PIN 3
+#define MONOCLE_SERVO_PIN 9
 #define MONOCLE_FLASH_LED_PIN 7
 
 #define BOTTLE_DOOR_SERVO_PIN 6
-#define BOTTLE_SERVO_PIN 5
+#define BOTTLE_SERVO_PIN 10
 
 #define ARDUINO_SOUND_PIN 4
 
-#define GREEN_LED_PIN 10
+#define GREEN_LED_PIN 3
