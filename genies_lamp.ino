@@ -90,9 +90,7 @@ void setup() {
   digitalWrite(MONOCLE_FLASH_LED_PIN, LOW);
   g_monocle_flash_state = false;
   g_monocle_flash_tigger_time = 0;
-  monocle_servo.attach(MONOCLE_SERVO_PIN);
   monocle_move_servo_to_position_at_random_speed(MONOCLE_SERVO_STARTING_POSITION);
-  monocle_servo.detach();
 
   // Bottle
   g_bottle_position = 0;
@@ -137,6 +135,9 @@ bool is_PIR_on() {
    * return true if the pir is on
    */
    
+  // uncomment for testing
+  // return true;
+
   if (digitalRead(PIR_SENSOR_PIN)) {
     return true;
   } else {
@@ -215,7 +216,6 @@ void monocle_update() {
     g_monocle_trigger_time = -1;
 
     if (is_PIR_on()) {
-      //@TODO: attach/detach the monocle servo
       monocle_trigger();
     }
   }
@@ -269,32 +269,34 @@ void monocle_move_servo_to_position_at_random_speed(int position_state) {
    *  @param position_state: integer representation of the position state
    */
   int speed = random(MONOCLE_SERVO_MIN_SPEED, MONOCLE_SERVO_MAX_SPEED + 1);
+  monocle_servo.attach(MONOCLE_SERVO_PIN);
   switch(position_state) {
     case 1:
-      monocle_servo.write(64, speed, false);
+      monocle_servo.write(64, speed, true);
       break;
     case 2:
-      monocle_servo.write(71, speed, false);
+      monocle_servo.write(71, speed, true);
       break;
     case 3:
-      monocle_servo.write(80, speed, false);
+      monocle_servo.write(80, speed, true);
       break;
     case 4:
-      monocle_servo.write(90, speed, false);
+      monocle_servo.write(90, speed, true);
       break;
     case 5:
-      monocle_servo.write(100, speed, false);
+      monocle_servo.write(100, speed, true);
       break;
     case 6:
-      monocle_servo.write(112, speed, false);
+      monocle_servo.write(112, speed, true);
       break;
     case 7:
-      monocle_servo.write(126, speed, false);
+      monocle_servo.write(126, speed, true);
       break;
     case 8:
-      monocle_servo.write(54, speed, false);
+      monocle_servo.write(54, speed, true);
       break;
   }
+  monocle_servo.detach();
 }
 
 void bottle_update() {
@@ -496,12 +498,25 @@ void bottle_movement() {
         g_bottle_waiting = true;
       } else {
         if (millis() >= g_bottle_last_action_time + BOTTLE_DOOR_OPEN_TIME) {
-          g_bottle_action_num = 0;
+          g_bottle_action_num = 10;
           g_bottle_waiting = false;
           bottle_door_servo.detach();
         }
       }
       break;
+
+    // wait 3 sec and turn the lamp on
+    case 10:
+      if (g_bottle_waiting == false){
+        g_bottle_next_action_time = millis() + 3000;
+        g_bottle_waiting = true;
+      } else {
+        if (millis() >= g_bottle_next_action_time){
+          digitalWrite(LAMP_LED_PIN, HIGH);
+          g_bottle_action_num = 0;
+          g_bottle_waiting = false;
+        }
+      }
   }
 }
 
