@@ -107,6 +107,7 @@ void setup() {
   bottle_door_servo.attach(BOTTLE_DOOR_SERVO_PIN);
   bottle_servo.write(BOTTLE_SERVO_INSIDE_POS, 2, false);
   bottle_door_servo.write(BOTTLE_DOOR_SERVO_CLOSED_POS, BOTTLE_DOOR_SERVO_SPEED, false);
+  delay(500);
   bottle_servo.detach();
   bottle_door_servo.detach();
 
@@ -296,6 +297,7 @@ void monocle_move_servo_to_position_at_random_speed(int position_state) {
       monocle_servo.write(54, speed, true);
       break;
   }
+  delay(500);
   monocle_servo.detach();
 }
 
@@ -349,6 +351,7 @@ void bottle_movement() {
         if (millis() >= g_bottle_last_action_time + BOTTLE_DOOR_OPEN_TIME) {
           g_bottle_action_num = 2;
           g_bottle_waiting = false;
+          delay(500);
           bottle_door_servo.detach();
         }
       }
@@ -367,6 +370,7 @@ void bottle_movement() {
         if (millis() >= g_bottle_last_action_time + BOTTLE_MOVE_TIME) {
           g_bottle_action_num = 3;
           g_bottle_waiting = false;
+          delay(500);
           bottle_servo.detach();
         }
       }
@@ -460,6 +464,7 @@ void bottle_movement() {
         int bottle_speed = random(BOTTLE_SERVO_SPEED_MIN, BOTTLE_SERVO_SPEED_MAX + 1);
         bottle_servo.attach(BOTTLE_SERVO_PIN);
         bottle_servo.write(BOTTLE_SERVO_INSIDE_POS, bottle_speed, false);
+        delay(500);
         bottle_servo.detach();
         g_bottle_last_action_time = millis();
         g_bottle_waiting = true;
@@ -470,7 +475,6 @@ void bottle_movement() {
           g_slope = -1;
         } else {
           //fade the window back up to the original
-          //@TODO: fade the window
           if (g_slope == -1){
             g_slope =   g_big_window_value_0 / BOTTLE_MOVE_TIME;
             g_update_time = 100;
@@ -500,6 +504,7 @@ void bottle_movement() {
         if (millis() >= g_bottle_last_action_time + BOTTLE_DOOR_OPEN_TIME) {
           g_bottle_action_num = 10;
           g_bottle_waiting = false;
+          delay(500);
           bottle_door_servo.detach();
         }
       }
@@ -525,6 +530,6 @@ float get_green_led_slope(){
   *   get a random slope for the green led to fade at
   */
 
-  return (float)random(3, 8) / 100;
+  return (float)random(9, 22) / 100;
 
 }
