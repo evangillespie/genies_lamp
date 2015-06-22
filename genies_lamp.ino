@@ -137,7 +137,7 @@ bool is_PIR_on() {
    */
    
   // uncomment for testing
-  return true;
+  // return true;
 
   if (digitalRead(PIR_SENSOR_PIN)) {
     return true;
@@ -461,12 +461,12 @@ void bottle_movement() {
         int bottle_speed = random(BOTTLE_SERVO_SPEED_MIN, BOTTLE_SERVO_SPEED_MAX + 1);
         bottle_servo.attach(BOTTLE_SERVO_PIN);
         bottle_servo.write(BOTTLE_SERVO_INSIDE_POS, bottle_speed, false);
-        delay(500);
-        bottle_servo.detach();
         g_bottle_last_action_time = millis();
         g_bottle_waiting = true;
       } else {
         if (millis() >= g_bottle_last_action_time + BOTTLE_MOVE_TIME) {
+          delay(500);
+          bottle_servo.detach();
           g_bottle_action_num = 8;
           g_bottle_waiting = false;
           g_slope = -1;
@@ -494,7 +494,7 @@ void bottle_movement() {
     // restore pot control to big window
     case 8:
       g_big_window_under_pot_control = true;
-      g_bottle_action_num = 8;
+      g_bottle_action_num = 9;
       break;
 
     //close door
