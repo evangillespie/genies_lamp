@@ -137,7 +137,7 @@ bool is_PIR_on() {
    */
    
   // uncomment for testing
-  // return true;
+  return true;
 
   if (digitalRead(PIR_SENSOR_PIN)) {
     return true;
@@ -326,7 +326,9 @@ void bottle_trigger() {
   /*
    *  Make the bottle do its actions
    */
-  g_bottle_action_num = 1;
+  if (g_bottle_action_num == 0){
+    g_bottle_action_num = 1;
+  }
 }
 
 
@@ -386,7 +388,7 @@ void bottle_movement() {
           g_slope = 0.01;
         g_update_time = 100;
         g_bottle_next_action_time = millis() + (unsigned long)g_update_time;
-        g_big_window_value_0 =   g_big_window_value;
+        g_big_window_value_0 = g_big_window_value;
       }
 
       if (millis() >= g_bottle_next_action_time){
@@ -452,14 +454,9 @@ void bottle_movement() {
       analogWrite(GREEN_LED_PIN, g_green_led_value);
       break;
 
-    // restore pot control to big window
-    case 7:
-      g_big_window_under_pot_control = true;
-      g_bottle_action_num = 8;
-      break;
 
     //move bottle back
-    case 8:
+    case 7:
       if (g_bottle_waiting == false){
         int bottle_speed = random(BOTTLE_SERVO_SPEED_MIN, BOTTLE_SERVO_SPEED_MAX + 1);
         bottle_servo.attach(BOTTLE_SERVO_PIN);
@@ -470,14 +467,14 @@ void bottle_movement() {
         g_bottle_waiting = true;
       } else {
         if (millis() >= g_bottle_last_action_time + BOTTLE_MOVE_TIME) {
-          g_bottle_action_num = 9;
+          g_bottle_action_num = 8;
           g_bottle_waiting = false;
           g_slope = -1;
         } else {
           //fade the window back up to the original
           if (g_slope == -1){
-            g_slope =   g_big_window_value_0 / BOTTLE_MOVE_TIME;
-            g_update_time = 100;
+            g_slope = (double)g_big_window_value_0 / (double)BOTTLE_MOVE_TIME;
+            g_update_time = 150;
             g_bottle_next_action_time = millis() + (unsigned long)g_update_time;
           }
           if (millis() >= g_bottle_next_action_time){
@@ -491,6 +488,13 @@ void bottle_movement() {
         }
       }
       analogWrite(BIG_WINDOW_LED_PIN, g_big_window_value);
+      break;
+
+
+    // restore pot control to big window
+    case 8:
+      g_big_window_under_pot_control = true;
+      g_bottle_action_num = 8;
       break;
 
     //close door
@@ -529,7 +533,6 @@ float get_green_led_slope(){
   /*
   *   get a random slope for the green led to fade at
   */
-
   return (float)random(9, 22) / 100;
 
 }
