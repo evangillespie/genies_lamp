@@ -96,7 +96,6 @@ void setup() {
   g_bottle_position = 0;
   g_bottle_trigger_time = -1;
   g_bottle_last_reset_time = 0;
-  bottle_door_servo.write(BOTTLE_DOOR_SERVO_CLOSED_POS, BOTTLE_DOOR_SERVO_SPEED, false);
   g_bottle_action_num = 0;
   g_bottle_last_action_time = 0;
   g_bottle_waiting = false;
@@ -105,8 +104,8 @@ void setup() {
 
   bottle_servo.attach(BOTTLE_SERVO_PIN);
   bottle_door_servo.attach(BOTTLE_DOOR_SERVO_PIN);
-  bottle_servo.write(BOTTLE_SERVO_INSIDE_POS, 2, false);
-  bottle_door_servo.write(BOTTLE_DOOR_SERVO_CLOSED_POS, BOTTLE_DOOR_SERVO_SPEED, false);
+  bottle_servo.write(119, 2, false);
+  bottle_door_servo.write(76, BOTTLE_DOOR_SERVO_SPEED, false);
   delay(500);
   bottle_servo.detach();
   bottle_door_servo.detach();
@@ -297,7 +296,7 @@ void monocle_move_servo_to_position_at_random_speed(int position_state) {
       monocle_servo.write(54, speed, true);
       break;
   }
-  delay(500);
+  delay(200);
   monocle_servo.detach();
 }
 

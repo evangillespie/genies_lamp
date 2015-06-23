@@ -6,7 +6,7 @@
 #define RED_CRYSTAL_MAX_BRIGHTNESS 255	//0-255
 #define RED_CRYSTAL_MIN_BRIGHTNESS 1
 #define RED_CRYSTAL_MIN_TIME 100  // minimum time to fade in milliseconds
-#define RED_CRYSTAL_MAX_TIME 120
+#define RED_CRYSTAL_MAX_TIME 220
 #define RED_CRYSTAL_CHANGE_INCREMENT 6 // incremental change in brightness each time the crystal led updates
 
 // Monocle random timing variables
@@ -26,9 +26,9 @@
 #define BOTTLE_DOOR_SERVO_OPEN_POS 121
 #define BOTTLE_DOOR_SERVO_CLOSED_POS 76
 #define BOTTLE_DOOR_SERVO_SPEED 2
-#define BOTTLE_MOVE_TIME 7000
+#define BOTTLE_MOVE_TIME 21000
 #define BOTTLE_SERVO_INSIDE_POS 119
-#define BOTTLE_SERVO_OUTSIDE_POS 58
+#define BOTTLE_SERVO_OUTSIDE_POS 59
 #define BOTTLE_SERVO_SPEED_MIN 4
 #define BOTTLE_SERVO_SPEED_MAX 10
 
