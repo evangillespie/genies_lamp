@@ -414,7 +414,7 @@ void bottle_movement() {
     //wait for 1 second
     case 5:
       if (g_bottle_waiting == false) {
-        g_bottle_next_action_time = millis() + (unsigned long)1000;
+        g_bottle_next_action_time = millis() + (unsigned long)WAIT_TIME_LAMP;
         g_bottle_waiting = true;
       } else {
         if (millis() >= g_bottle_next_action_time){
@@ -432,7 +432,7 @@ void bottle_movement() {
     //wait for 2 second
     case 7:
       if (g_bottle_waiting == false) {
-        g_bottle_next_action_time = millis() + (unsigned long)2000;
+        g_bottle_next_action_time = millis() + (unsigned long)WAIT_TIME_GREEN;
         g_bottle_waiting = true;
       } else {
         if (millis() >= g_bottle_next_action_time){
@@ -480,7 +480,7 @@ void bottle_movement() {
     //wait for 4 second
     case 9:
       if (g_bottle_waiting == false) {
-        g_bottle_next_action_time = millis() + (unsigned long)4000;
+        g_bottle_next_action_time = millis() + (unsigned long)WAIT_TIME_BOTTLE_BACK;
         g_bottle_waiting = true;
       } else {
         if (millis() >= g_bottle_next_action_time){
@@ -498,8 +498,7 @@ void bottle_movement() {
         g_bottle_last_action_time = millis();
         g_bottle_waiting = true;
       } else {
-        if (millis() >= g_bottle_last_action_time + BOTTLE_MOVE_TIME) {
-          delay(500);
+        if (millis() >= g_bottle_last_action_time + BIG_WINDOW_FADE_UP_TIME) {
           bottle_servo.detach();
           increment_bottle_action_num();
           g_bottle_waiting = false;
@@ -507,7 +506,7 @@ void bottle_movement() {
         } else {
           //fade the window back up to the original
           if (g_slope == -1){
-            g_slope = (double)g_big_window_value_0 / (double)BOTTLE_MOVE_TIME;
+            g_slope = (double)g_big_window_value_0 / (double)BIG_WINDOW_FADE_UP_TIME;
             g_update_time = 150;
             g_bottle_next_action_time = millis() + (unsigned long)g_update_time;
           }
@@ -534,7 +533,7 @@ void bottle_movement() {
     //wait for 2 second
     case 12:
       if (g_bottle_waiting == false) {
-        g_bottle_next_action_time = millis() + (unsigned long)2000;
+        g_bottle_next_action_time = millis() + (unsigned long)WAIT_TIME_DOOR_CLOSE;
         g_bottle_waiting = true;
       } else {
         if (millis() >= g_bottle_next_action_time){
