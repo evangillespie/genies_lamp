@@ -138,7 +138,7 @@ bool is_PIR_on() {
   // uncomment for testing
   // return true;
 
-  if (digitalRead(PIR_SENSOR_PIN)) {
+  if (digitalRead(PIR_SENSOR_PIN) == HIGH) {
     return true;
   } else {
      return false;  
@@ -272,10 +272,10 @@ void monocle_move_servo_to_position_at_random_speed(int position_state) {
   monocle_servo.attach(MONOCLE_SERVO_PIN);
   switch(position_state) {
     case 1:
-      monocle_servo.write(64, speed, true);
+      monocle_servo.write(63, speed, true);
       break;
     case 2:
-      monocle_servo.write(71, speed, true);
+      monocle_servo.write(69, speed, true);
       break;
     case 3:
       monocle_servo.write(80, speed, true);
