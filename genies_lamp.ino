@@ -74,7 +74,6 @@ void setup() {
   // Lamp
   pinMode(LAMP_LED_PIN, OUTPUT);
   digitalWrite(LAMP_LED_PIN, LOW);
-  g_lamp_status = false; 
   
   // Red Crystal
   g_red_crystal_getting_brighter = 1;
@@ -119,8 +118,9 @@ void setup() {
 void loop() {
   if( is_PIR_on() == true){
     turn_leds_on();
-    lamp_on();
     red_crystal_update();
+  } else {
+    turn_leds_off();
   }
 
   monocle_update();
@@ -151,6 +151,7 @@ void turn_leds_on() {
    */
   digitalWrite(MOSFET_LED, HIGH);
   digitalWrite(HALLWAY_LED, HIGH);
+  digitalWrite(LAMP_LED_PIN, HIGH);
 
   if (g_big_window_under_pot_control == true){
     g_big_window_value = map(analogRead(BIG_WINDOW_POT_PIN), 0, 1023, 0, 255);
@@ -159,14 +160,14 @@ void turn_leds_on() {
 }
 
 
-void lamp_on() {
+void turn_leds_off() {
   /*
-   * Turn the lamp led on
+   * turn off a bunch of leds - inverse of turn_leds_on()
    */
-  if (g_lamp_status == false){
-    g_lamp_status = true;
-    digitalWrite(LAMP_LED_PIN, HIGH);
-  }
+  digitalWrite(MOSFET_LED, LOW);
+  digitalWrite(HALLWAY_LED, LOW);
+  digitalWrite(LAMP_LED_PIN, LOW);
+  analogWrite(BIG_WINDOW_LED_PIN, 0);
 }
 
 
