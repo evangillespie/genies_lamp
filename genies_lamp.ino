@@ -423,6 +423,7 @@ void bottle_movement() {
           increment_bottle_action_num();
         }
       }
+      break;
 
     //turn lamp off
     case 6:
@@ -441,11 +442,11 @@ void bottle_movement() {
           increment_bottle_action_num();
         }
       }
+      break;
 
     // fade the green led back and forth
     // cleanup includes turning sound off
     case 8:
-
       if (g_slope == -1){
         //using g_bottle_last_action_time b/c its available
         g_bottle_last_action_time = millis() + random(15000, 30001);
@@ -489,6 +490,7 @@ void bottle_movement() {
           increment_bottle_action_num();
         }
       }
+      break;
 
     //move bottle back
     case 10:
@@ -542,6 +544,7 @@ void bottle_movement() {
           increment_bottle_action_num();
         }
       }
+      break;
 
     //close door
     case 13:
@@ -572,6 +575,7 @@ void bottle_movement() {
           g_bottle_waiting = false;
         }
       }
+      break;
   }
 }
 
