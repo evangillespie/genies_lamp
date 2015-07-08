@@ -22,7 +22,6 @@ bool g_lamp_status;
 // big window
 bool g_big_window_under_pot_control;
 int g_big_window_value;
-int g_big_window_value_0;
 
 
 // Red Crystal Variables
@@ -69,7 +68,6 @@ void setup() {
   analogWrite(BIG_WINDOW_LED_PIN, 0);
   g_big_window_under_pot_control = true;
   g_big_window_value = 0;
-  g_big_window_value_0 = 0;
    
   // Lamp
   pinMode(LAMP_LED_PIN, OUTPUT);
@@ -103,8 +101,8 @@ void setup() {
 
   bottle_servo.attach(BOTTLE_SERVO_PIN);
   bottle_door_servo.attach(BOTTLE_DOOR_SERVO_PIN);
-  bottle_servo.write(119, 2, false);
-  bottle_door_servo.write(76, BOTTLE_DOOR_SERVO_SPEED, false);
+  bottle_servo.write(119, 2, true);
+  bottle_door_servo.write(76, BOTTLE_DOOR_SERVO_SPEED, true);
   delay(500);
   bottle_servo.detach();
   bottle_door_servo.detach();
@@ -151,7 +149,8 @@ void turn_leds_on() {
    */
   digitalWrite(MOSFET_LED, HIGH);
   digitalWrite(HALLWAY_LED, HIGH);
-  digitalWrite(LAMP_LED_PIN, HIGH);
+  if (g_lamp_status)
+    digitalWrite(LAMP_LED_PIN, HIGH);
 
   if (g_big_window_under_pot_control == true){
     g_big_window_value = map(analogRead(BIG_WINDOW_POT_PIN), 0, 1023, 0, 255);
@@ -168,6 +167,7 @@ void turn_leds_off() {
   digitalWrite(HALLWAY_LED, LOW);
   digitalWrite(LAMP_LED_PIN, LOW);
   analogWrite(BIG_WINDOW_LED_PIN, 0);
+  analogWrite(RED_CRYSTAL_LED_PIN, 0);
 }
 
 
@@ -347,10 +347,9 @@ void bottle_movement() {
       if (g_bottle_waiting == false){
         bottle_door_servo.attach(BOTTLE_DOOR_SERVO_PIN);
         bottle_door_servo.write(BOTTLE_DOOR_SERVO_OPEN_POS, BOTTLE_DOOR_SERVO_SPEED, false);
-        g_bottle_last_action_time = millis();
         g_bottle_waiting = true;
       } else {
-        if (millis() >= g_bottle_last_action_time + BOTTLE_DOOR_OPEN_TIME) {
+        if (bottle_door_servo.read() == BOTTLE_DOOR_SERVO_OPEN_POS){
           increment_bottle_action_num();
           g_bottle_waiting = false;
           delay(500);
@@ -366,10 +365,9 @@ void bottle_movement() {
 
         bottle_servo.attach(BOTTLE_SERVO_PIN);
         bottle_servo.write(BOTTLE_SERVO_OUTSIDE_POS, bottle_speed, false);
-        g_bottle_last_action_time = millis();
         g_bottle_waiting = true;
       } else {
-        if (millis() >= g_bottle_last_action_time + BOTTLE_MOVE_TIME) {
+        if (bottle_servo.read() == BOTTLE_SERVO_OUTSIDE_POS){
           increment_bottle_action_num();
           g_bottle_waiting = false;
           delay(500);
@@ -383,12 +381,11 @@ void bottle_movement() {
       g_big_window_under_pot_control = false;
 
       if (g_slope < 0){
-        g_slope = (double)g_big_window_value / (double)5000;  // lamp fades over 5 seconds
+        g_slope = (double)g_big_window_value / (double)5000;  // big window fades over 5 seconds
         if (g_slope < 0.01)
           g_slope = 0.01;
         g_update_time = 100;
         g_bottle_next_action_time = millis() + (unsigned long)g_update_time;
-        g_big_window_value_0 = g_big_window_value;
       }
 
       if (millis() >= g_bottle_next_action_time){
@@ -427,6 +424,7 @@ void bottle_movement() {
 
     //turn lamp off
     case 6:
+      g_lamp_status = false;
       digitalWrite(LAMP_LED_PIN, LOW);
       increment_bottle_action_num();
       break;
@@ -498,7 +496,6 @@ void bottle_movement() {
         int bottle_speed = random(BOTTLE_SERVO_SPEED_MIN, BOTTLE_SERVO_SPEED_MAX + 1);
         bottle_servo.attach(BOTTLE_SERVO_PIN);
         bottle_servo.write(BOTTLE_SERVO_INSIDE_POS, bottle_speed, false);
-        g_bottle_last_action_time = millis();
         g_bottle_waiting = true;
       } else {
         if (millis() >= g_bottle_last_action_time + BIG_WINDOW_FADE_UP_TIME) {
@@ -509,17 +506,16 @@ void bottle_movement() {
         } else {
           //fade the window back up to the original
           if (g_slope == -1){
-            g_slope = (double)g_big_window_value_0 / (double)BIG_WINDOW_FADE_UP_TIME;
-            g_update_time = 150;
-            g_bottle_next_action_time = millis() + (unsigned long)g_update_time;
+            g_bottle_last_action_time = millis();
+            g_slope = (double)map(analogRead(BIG_WINDOW_POT_PIN), 0, 1023, 0, 255) / 
+                                (double)BIG_WINDOW_FADE_UP_TIME;
+            g_update_time = 3;  //actually using this variable for an intensity increment
+            g_bottle_next_action_time = millis() + (unsigned long)((double)g_update_time/g_slope);
           }
           if (millis() >= g_bottle_next_action_time){
-            g_bottle_next_action_time += (unsigned long)g_update_time;
-            g_big_window_value += (int)((double)g_update_time * g_slope);
+            g_bottle_next_action_time += (unsigned long)((double)g_update_time/g_slope);
+            g_big_window_value += (int)g_update_time;
 
-            if (g_big_window_value >= g_big_window_value_0){
-              g_big_window_value = g_big_window_value_0;
-            }
           }
         }
       }
@@ -551,10 +547,9 @@ void bottle_movement() {
       if (g_bottle_waiting == false){
         bottle_door_servo.attach(BOTTLE_DOOR_SERVO_PIN);
         bottle_door_servo.write(BOTTLE_DOOR_SERVO_CLOSED_POS, BOTTLE_DOOR_SERVO_SPEED, false);
-        g_bottle_last_action_time = millis();
         g_bottle_waiting = true;
       } else {
-        if (millis() >= g_bottle_last_action_time + BOTTLE_DOOR_OPEN_TIME) {
+        if (bottle_door_servo.read() == BOTTLE_DOOR_SERVO_CLOSED_POS) {
           increment_bottle_action_num();
           g_bottle_waiting = false;
           delay(500);
@@ -570,6 +565,7 @@ void bottle_movement() {
         g_bottle_waiting = true;
       } else {
         if (millis() >= g_bottle_next_action_time){
+          g_lamp_status = true;
           digitalWrite(LAMP_LED_PIN, HIGH);
           g_bottle_action_num = 0;
           g_bottle_waiting = false;
