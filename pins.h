@@ -16,7 +16,7 @@
 
 #define BIG_WINDOW_LED_PIN 5
 #define MOSFET_LED 8
-#define HALLWAY_LED 12
+#define HALLWAY_LED_PIN 12
 #define LAMP_LED_PIN 13
 
 #define RED_CRYSTAL_LED_PIN 11

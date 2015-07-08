@@ -63,6 +63,10 @@ void setup() {
 
   pinMode(PIR_SENSOR_PIN, INPUT);
 
+  //sound
+  pinMode(ARDUINO_SOUND_PIN, OUTPUT);
+  digitalWrite(ARDUINO_SOUND_PIN, LOW);
+
   // Big Window
   pinMode(BIG_WINDOW_LED_PIN, OUTPUT); 
   analogWrite(BIG_WINDOW_LED_PIN, 0);
@@ -72,6 +76,7 @@ void setup() {
   // Lamp
   pinMode(LAMP_LED_PIN, OUTPUT);
   digitalWrite(LAMP_LED_PIN, LOW);
+  g_lamp_status = true;
   
   // Red Crystal
   g_red_crystal_getting_brighter = 1;
@@ -107,9 +112,6 @@ void setup() {
   bottle_servo.detach();
   bottle_door_servo.detach();
 
-  //sound
-  pinMode(ARDUINO_SOUND_PIN, OUTPUT);
-  digitalWrite(ARDUINO_SOUND_PIN, LOW);
 }
 
 
@@ -148,7 +150,7 @@ void turn_leds_on() {
    * Ensure the always-on leds are on and update to pot value
    */
   digitalWrite(MOSFET_LED, HIGH);
-  digitalWrite(HALLWAY_LED, HIGH);
+  digitalWrite(HALLWAY_LED_PIN, HIGH);
   if (g_lamp_status)
     digitalWrite(LAMP_LED_PIN, HIGH);
 
@@ -164,7 +166,7 @@ void turn_leds_off() {
    * turn off a bunch of leds - inverse of turn_leds_on()
    */
   digitalWrite(MOSFET_LED, LOW);
-  digitalWrite(HALLWAY_LED, LOW);
+  digitalWrite(HALLWAY_LED_PIN, LOW);
   digitalWrite(LAMP_LED_PIN, LOW);
   analogWrite(BIG_WINDOW_LED_PIN, 0);
   analogWrite(RED_CRYSTAL_LED_PIN, 0);
@@ -509,7 +511,7 @@ void bottle_movement() {
             g_bottle_last_action_time = millis();
             g_slope = (double)map(analogRead(BIG_WINDOW_POT_PIN), 0, 1023, 0, 255) / 
                                 (double)BIG_WINDOW_FADE_UP_TIME;
-            g_update_time = 3;  //actually using this variable for an intensity increment
+            g_update_time = 2;  //actually using this variable for an intensity increment
             g_bottle_next_action_time = millis() + (unsigned long)((double)g_update_time/g_slope);
           }
           if (millis() >= g_bottle_next_action_time){
